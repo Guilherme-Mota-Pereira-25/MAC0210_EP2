@@ -1,11 +1,7 @@
 function calculateError(originalImg, decompressedImg)
   error = 0;
   for k = [1:3]
-    ch = decompressedImg(:,:,k);
-    aux = originalImg(:,:,k) - ch;
-    aux = double(resize(aux,1,size(aux)(1)*size(aux)(2)));
-    ch = double(resize(ch,1,size(ch)(1)*size(ch)(2)));
-    error += (aux*aux')/(ch*ch');
+    error = error + vecnorm(originalImg-decompressedImg,2,k)/vecnorm(originalImg,2,k);
   endfor
-  printf("error: %f\n",error);
+  error = error/3
 endfunction
