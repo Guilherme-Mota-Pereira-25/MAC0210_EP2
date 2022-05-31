@@ -1,6 +1,10 @@
 clear all;
-img = imread("input.png");
-size(img)
-compress(img,1);
-c = imread("compressed.bmp");
-decompress(c,1,1,1);
+original = genImg();
+compress(original,1);
+compressed = imread("compressed.png");
+decompress(compressed,1,1,1);
+decompressed = imread("decompressed.png");
+calculateError(original([1:255],[1:255],:),decompressed);
+imshow(original);
+figure, imshow(compressed);
+figure, imshow(decompressed);
