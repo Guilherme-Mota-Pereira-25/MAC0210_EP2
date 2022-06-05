@@ -1,4 +1,4 @@
 clear all;
-compress("gato.png",2);
-decompress("compressed.png",2,2,1);
-calculateError("input.png","decompressed.png");
+compress("black-white.png",2);
+decompress("compressed.png",1,2,1);
+calculateError("black-white.png","decompressed.png");

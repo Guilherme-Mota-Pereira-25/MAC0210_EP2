@@ -1,23 +1,30 @@
 function decompress(compressedImg, method, k, h)
   
   compressed = imread(compressedImg);
+  if(size(size(compressed))(2) == 2)
+    color = 1
+  else
+    color = 3;
+  endif
   s_comp = size(compressed)(1) - 1;
   s_coef = s_comp-1;
   s_desc = (s_comp+1)*(1+k)-k;
-  decompressedImg = zeros(s_desc,s_desc,3);
+  decompressedImg = zeros(s_desc,s_desc,color);
   incr = h/(k+1);
   k_1 = k+1;
+
+  
   
   % Geração da matriz dos coeficientes:
   % Caso o método seja de interpolação Bilinear
   if method == 1
-    coefficients = zeros(s_comp,s_comp,3,4);
+    coefficients = zeros(s_comp,s_comp,color,4);
     % Gera-se a inversa da matriz dos coeficientes do sistema linear
      h_matrix_inv = inv([1 0 0 0; 1 0 h 0; 1 h 0 0; 1 h h h^2]);
      % Com isso:
     for i = [1:s_comp] % Para cada linha
       for j = [1:s_comp] % Para cada coluna
-        for c = [1:3]                        % Para cada canal de cor
+        for c = [1:color]                        % Para cada canal de cor
           % Gera-se a matriz coluna dos resultados esperados do sistema linear
           f_column = double([compressed(i,j,c);compressed(i,j+1,c);compressed(i+1,j,c);compressed(i+1,j+1,c)]);
           % E realiza-se o processo de multiplicação de h_matrix_inv por f_column (Vide [Parte do erro] no relatório)
@@ -30,7 +37,7 @@ function decompress(compressedImg, method, k, h)
     endfor
 
     % Interpolação para a descompressão:
-    for c = [1:3]
+    for c = [1:color]
       for i = [0:s_coef]
 	for j = [0:s_coef]
           for x_inc = [0:k]
@@ -58,15 +65,15 @@ function decompress(compressedImg, method, k, h)
 
 
   elseif method == 2
-    coefficients = double(zeros(s_comp,s_comp,3,4,4));
+    coefficients = double(zeros(s_comp,s_comp,color,4,4));
     h_matrix = [1 0 0 0; 1 h h^2 h^3; 0 1 0 0; 0 1 2*h 3*h^2];
     s_comp2 = s_comp+1;
 
 
 
     %Calculo dos coeficientes
-    der = double(zeros(3,s_comp2,s_comp2,3));
-    for c = [1:3]
+    der = double(zeros(3,s_comp2,s_comp2,color));
+    for c = [1:color]
       %Calculo de todas as derivadas parciais
       for i = [1:s_comp2]
 	for j = [1:s_comp2]
@@ -126,7 +133,7 @@ function decompress(compressedImg, method, k, h)
     endfor
 
     %Processo de Interpolacao
-    for c = [1:3]
+    for c = [1:color]
       for i = [0:s_coef]
 	tx = i*k_1+1;
 	for j = [0:s_coef]
