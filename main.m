@@ -1,10 +1,10 @@
 clear all;
-original = imread("input.png");
-compress(original,1);
+original = imread("gato.png");
+compress(original,2);
 compressed = imread("compressed.png");
-decompress(compressed,2,1,2);
+decompress(compressed,1,2,1);
 decompressed = imread("decompressed.png");
-calculateError(original([1:255],[1:255],:),decompressed);
+calculateError(original,decompressed);
 imshow(original)
 figure, imshow(compressed);
 figure, imshow(decompressed);

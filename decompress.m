@@ -19,34 +19,37 @@ function decompress(compressedImg, method, k, h)
         endfor
       endfor
     endfor
-				% Interpolação para a descompressão:
+    
+    % Interpolação para a descompressão:
     incr = h/(k+1);
     decompressedImg = zeros(size(compressedImg)(1)*(1+k)-k,size(compressedImg)(2)*(1+k)-k,3);
+    size(decompressedImg)
     for c = [1:3]
-      for i = [1:size(coefficients)(1)]
-	for j = [1:size(coefficients)(2)]
+      for i = [0:size(coefficients)(1)-1]
+	for j = [0:size(coefficients)(2)-1]
           for x_inc = [0:k]
             for y_inc = [0:k]
               pos_desc_i = i*(k+1)+x_inc;
               pos_desc_j = j*(k+1)+y_inc;
-              cf = coefficients(i,j,c,:);
-              decompressedImg(pos_desc_i,pos_desc_j,c) = cf(1) + cf(2)*(x_inc) +cf(3)*(y_inc) + cf(4)*(x_inc)*(y_inc);
+              cf = coefficients(i+1,j+1,c,:);
+              decompressedImg(pos_desc_i+1,pos_desc_j+1,c) = cf(1) + cf(2)*(x_inc) +cf(3)*(y_inc) + cf(4)*(x_inc)*(y_inc);
+            endfor
           endfor
-        endfor
+	endfor
       endfor
-    endfor
-    for i = [1:size(coefficients)(1)]
-      cf1 = coefficients(size(coefficients)(1),i,c,:);
-      cf2 = coefficients(i,size(coefficients)(2),c,:);
-      for g_inc = [0:k]
-        pos_desc_i = i*(k+1)+g_inc;
-        decompressedImg(size(decompressedImg)(1),pos_desc_i,c) = cf1(1) + cf1(2)*(k+1) +cf1(3)*(g_inc) + cf1(4)*(g_inc)*(k+1);
-        decompressedImg(pos_desc_i,size(decompressedImg)(2),c) = cf2(1) + cf2(2)*(g_inc) +cf2(3)*(k+1) + cf2(4)*(g_inc)*(k+1);
+      size(decompressedImg)
+      for i = [0:size(coefficients)(1)-1]
+	cf1 = coefficients(size(coefficients)(1),i+1,c,:);
+	cf2 = coefficients(i+1,size(coefficients)(2),c,:);
+	for g_inc = [0:k]
+          pos_desc_i = i*(k+1)+g_inc;
+          decompressedImg(size(decompressedImg)(1),pos_desc_i+1,c) = cf1(1) + cf1(2)*(k+1) +cf1(3)*(g_inc) + cf1(4)*(g_inc)*(k+1);
+          decompressedImg(pos_desc_i+1,size(decompressedImg)(2),c) = cf2(1) + cf2(2)*(g_inc) +cf2(3)*(k+1) + cf2(4)*(g_inc)*(k+1);
+	endfor
       endfor
+      cff = coefficients(size(coefficients)(1),size(coefficients)(2),c,:);
+      decompressedImg(size(decompressedImg(1)),size(decompressedImg)(2),c) = cff(1) + cff(2)*(k+1) +cff(3)*(k+1) + cff(4)*(k+1)^2;
     endfor
-    cff = coefficients(size(coefficients)(1),size(coefficients)(2),c,:);
-    decompressedImg(size(decompressedImg(1)),size(decompressedImg)(2),c) = cff(1) + cff(2)*(k+1) +cff(3)*(k+1) + cff(4)*(k+1)^2;
-  endfor
 
 
   elseif method == 2
