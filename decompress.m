@@ -1,34 +1,29 @@
 function decompress(compressedImg, method, k, h)
-  
-  compressed = imread(compressedImg);
-  if(size(size(compressed))(2) == 2)
+  %Estabelece as variaveis
+  compressed = imread(compressedImg); %Imagem a ser descomprimida
+  if(size(size(compressed))(2) == 2) %Verifica se a imagem eh colorida
     color = 1
   else
     color = 3;
   endif
-  s_comp = size(compressed)(1) - 1;
-  s_coef = s_comp-1;
-  s_desc = (s_comp+1)*(1+k)-k;
-  decompressedImg = zeros(s_desc,s_desc,color);
-  incr = h/(k+1);
-  k_1 = k+1;
+  s_comp = size(compressed)(1) - 1; %Tamanho da img comprimida - 1
+  s_coef = s_comp-1; %Numero de coeficientes - 1
+  s_desc = (s_comp+1)*(1+k)-k; %Tamanho da imagem descomprimida
+  decompressedImg = zeros(s_desc,s_desc,color); %Imagem descomprimida
+  incr = h/(k+1); %Incremento entre cada pixel da imagem descomprimid
+  k_1 = k+1; %Variavel auxiliar
 
-  
-  
-  % Geração da matriz dos coeficientes:
-  % Caso o método seja de interpolação Bilinear
-  if method == 1
+  % Estipulacao do metodo de descompressao
+  if method == 1 % Metodo da interpolacao bilinear
+
+    %Geracao dos coeficientes
     coefficients = zeros(s_comp,s_comp,color,4);
-    % Gera-se a inversa da matriz dos coeficientes do sistema linear
-     h_matrix_inv = inv([1 0 0 0; 1 0 h 0; 1 h 0 0; 1 h h h^2]);
-     % Com isso:
-    for i = [1:s_comp] % Para cada linha
-      for j = [1:s_comp] % Para cada coluna
-        for c = [1:color]                        % Para cada canal de cor
-          % Gera-se a matriz coluna dos resultados esperados do sistema linear
-          f_column = double([compressed(i,j,c);compressed(i,j+1,c);compressed(i+1,j,c);compressed(i+1,j+1,c)]);
-          % E realiza-se o processo de multiplicação de h_matrix_inv por f_column (Vide [Parte do erro] no relatório)
-          _res = (h_matrix_inv*f_column);
+    h_matrix_inv = inv([1 0 0 0; 1 0 h 0; 1 h 0 0; 1 h h h^2]); % Cria-se a inversa da matriz dos coeficientes do sistema linear
+    for i = [1:s_comp]
+      for j = [1:s_comp]
+        for c = [1:color]
+          f_column = double([compressed(i,j,c);compressed(i,j+1,c);compressed(i+1,j,c);compressed(i+1,j+1,c)]); % Gera-se a matriz coluna dos resultados esperados do sistema linear
+          _res = (h_matrix_inv*f_column); % Realiza-se o processo de multiplicação de h_matrix_inv por f_column
           for l = [1:4]
             coefficients(i,j,c,l) = _res(l);
           endfor
@@ -38,19 +33,19 @@ function decompress(compressedImg, method, k, h)
 
     % Interpolação para a descompressão:
     for c = [1:color]
+      %Percorre todos os coeficientes menos os da ultima linha e coluna 
       for i = [0:s_coef]
 	for j = [0:s_coef]
+	  %Cria um incremento para acessar todas as posicoes em [i:i+k]x[j:j+k]
           for x_inc = [0:k]
             for y_inc = [0:k]
-              pos_desc_i = i*k_1+x_inc+1;
-              pos_desc_j = j*k_1+y_inc+1;
-              cf = coefficients(i+1,j+1,c,:);
-              decompressedImg(pos_desc_i,pos_desc_j,c) = cf(1) + cf(2)*x_inc*incr +cf(3)*y_inc*incr + cf(4)*x_inc*y_inc*incr^2;
+              cf = coefficients(i+1,j+1,c,:); %Busca o vetor de coeficientes desse quadrante
+              decompressedImg(i*k_1+x_inc+1,j*k_1+y_inc+1,c) = cf(1) + cf(2)*x_inc*incr +cf(3)*y_inc*incr + cf(4)*x_inc*y_inc*incr^2; %Efetua o calculo do valor do ponto com base nos coeficientes e nos valores dos incrementos
             endfor
           endfor
 	endfor
       endfor
-      for i = [0:s_coef]
+      for i = [0:s_coef] %Opera da mesma forma que a parte anterior, porem serve para percorrer a ultima linha e ultima coluna da imagem que acabaram ficando de fora
 	cf1 = coefficients(s_coef,i+1,c,:);
 	cf2 = coefficients(i+1,s_coef,c,:);
 	for g_inc = [0:k]
@@ -59,17 +54,17 @@ function decompress(compressedImg, method, k, h)
           decompressedImg(pos_desc_i,s_desc,c) = cf2(1) + cf2(2)*g_inc*incr + cf2(3)*h + cf2(4)*g_inc*h*incr;
 	endfor
       endfor
+      %Por fim realiza o mesmo calculo para o ponto mais afastado da matriz da imagem
       cff = coefficients(s_coef,s_coef,c,:);
       decompressedImg(s_desc,s_desc,c) = cff(1) + cff(2)*h +cff(3)*h + cff(4)*h^2;
     endfor
 
 
-  elseif method == 2
+  elseif method == 2 %Metodo de interpolacao bicubica
+    %variaveis auxiliares
     coefficients = double(zeros(s_comp,s_comp,color,4,4));
     h_matrix = [1 0 0 0; 1 h h^2 h^3; 0 1 0 0; 0 1 2*h 3*h^2];
     s_comp2 = s_comp+1;
-
-
 
     %Calculo dos coeficientes
     der = double(zeros(3,s_comp2,s_comp2,color));
@@ -133,7 +128,7 @@ function decompress(compressedImg, method, k, h)
     endfor
 
     %Processo de Interpolacao
-    for c = [1:color]
+    for c = [1:color] 
       for i = [0:s_coef]
 	tx = i*k_1+1;
 	for j = [0:s_coef]
@@ -150,7 +145,7 @@ function decompress(compressedImg, method, k, h)
           endfor
 	endfor
       endfor
-      for i = [0:s_coef]
+      for i = [0:s_coef] %Calculo dos pontos da ultima linha e coluna da imagem
 	cf1 = coefficients(s_coef,i+1,c,:,:);
 	cf2 = coefficients(i+1,s_coef,c,:,:);
 	tg = i*k_1+1;
@@ -161,7 +156,7 @@ function decompress(compressedImg, method, k, h)
           decompressedImg(pos_desc_i,s_desc,c) = [1 g g^2 g^3] * reshape(cf2,4,4) * [1; h; h^2; h^3];
 	endfor
       endfor
-      cff = coefficients(s_coef,s_coef,c,:,:);
+      cff = coefficients(s_coef,s_coef,c,:,:); %Calculo do ponto mais afastado da imagem
       decompressedImg(s_desc,s_desc,c) = [1 h h^2 h^3] * reshape(cff,4,4) * [1; h; h^2; h^3];
     endfor
 
@@ -169,6 +164,6 @@ function decompress(compressedImg, method, k, h)
     "Numero do metodo incorreto!"
   endif
   
-  clear coefficients;
-  imwrite(uint8(decompressedImg),"decompressed.png",'Compression',"none",'Quality',0);
+  clear coefficients; %Limpa os coeficientes
+  imwrite(uint8(decompressedImg),"decompressed.png",'Compression',"none",'Quality',0); %Escreve a imagem descomprimida
 endfunction

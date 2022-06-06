@@ -1,5 +1,5 @@
 function image = genImg()
-  x = 0; y = 0; h = pi; p = 601; % Variáveis de definição da imagem e de sua projeção em R²
+  p = 601; % Tamanho da imagem
   image = uint8(zeros(p,p,3));
   for i = [1:p]
     for j = [1:p]
